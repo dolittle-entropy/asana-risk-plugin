@@ -43,21 +43,42 @@ tracker.on('task_changed', (task) => {
     updateTaskRisk(task);
 });
 
+const retry = (attempts, wait, func) => {
+    const attempt = (num, resolve, reject) => {
+        func().then((result) => {
+            resolve(result);
+        }).catch((err) => {
+            if (num < attempts) {
+                setTimeout(() => {
+                    attempt(num+1, resolve, reject);
+                }, wait);
+            } else {
+                reject(err);
+            }
+        });
+    };
+    return new Promise((resolve, reject) => {
+        attempt(1, resolve, reject);
+    });
+}
+
 app.listen(3000, () => {
     console.log('Listening on port 3000');
 
-    tracker.createWebhook(getEnvironmentalVariable('WEBHOOK_ENDPOINT')).then(() => {
-        tracker.getAllTasks().then((tasks) => {
-            console.log('Updating all task risks...');
-            tasks.forEach((task) => {
-                updateTaskRisk(task);
-            });
-        }).catch((err) => {
-            console.error('Error getting all tasks:', err);
-        })
-    }).catch(() => {
-        Process.exit(1);
-    });
+    setTimeout(() => {
+        retry(10, 5000, () => tracker.createWebhook(getEnvironmentalVariable('WEBHOOK_ENDPOINT'))).then(() => {
+            tracker.getAllTasks().then((tasks) => {
+                console.log('Updating all task risks...');
+                tasks.forEach((task) => {
+                    updateTaskRisk(task);
+                });
+            }).catch((err) => {
+                console.error('Error getting all tasks:', err);
+            })
+        }).catch(() => {
+            Process.exit(1);
+        });
+    }, 10000);
 });
 
 

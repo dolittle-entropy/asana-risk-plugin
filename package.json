@@ -1,6 +1,6 @@
 {
   "name": "asana-risk-plugin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "main.js",
   "repository": "https://github.com/dolittle-entropy/asana-risk-plugin.git",
   "author": "Jakob Høgenes",
